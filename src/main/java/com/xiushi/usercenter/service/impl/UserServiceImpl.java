@@ -116,11 +116,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 3.用户脱敏
-
         User safetyUser = getSafetyUser(user);
         // 4.记录用户的登录状态
         request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
-
         return safetyUser;
 
     }
@@ -147,6 +145,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserStatus(originUser.getUserStatus());
         safetyUser.setCreateTime(originUser.getCreateTime());
         return safetyUser;
+    }
+
+    /**
+     * 用户注销
+     * @param request
+     */
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        //移除登录态
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        return 1;
     }
 }
 
