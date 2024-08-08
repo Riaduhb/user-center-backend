@@ -10,10 +10,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 
  * @TableName user
  */
-@TableName(value ="user")
+@TableName(value = "user")
 @Data
 public class User implements Serializable {
     /**
@@ -82,6 +81,11 @@ public class User implements Serializable {
      * 用户角色 0 - 普通角色 1 - 管理员
      */
     private Integer userRole;
+
+    /**
+     * 编号
+     */
+    private String planetCode;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
