@@ -43,7 +43,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public long userRegister(String userAccount, String userPassword, String checkPassword,String planetCode) {
         // 1.校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
+            throw new BusinessException(ErrorCode.NULL_ERROR,"参数为空");
         }
         if (userAccount.length() < 4) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账户过短");
@@ -58,12 +58,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String validPattern = "[\\s`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户重复");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户不能包含特殊字符");
         }
 
         // 密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"编号重复");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码和校验密码不相同");
         }
 
         //账户不能重复
@@ -71,14 +71,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户重复");
         }
         //编号不能重复
         queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("planetCode", planetCode);
         count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"编号重复");
         }
         // 2.加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -90,7 +90,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setPlanetCode(planetCode);
         boolean saveResult = this.save(user);
         if (!saveResult) {
-            return -1;
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"系统内部异常");
         }
         return user.getId();
     }
@@ -99,20 +99,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1.校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR,"参数为空");
         }
         if (userAccount.length() < 4) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户账户过短");
         }
         if (userPassword.length() < 8) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
         }
 
         // 账户不能包含特殊字符
         String validPattern = "[\\s`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (matcher.find()) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户不能包含特殊字符");
         }
         // 2.加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
@@ -124,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 用户不存在
         if (user == null) {
             log.info("user login failed, userAccount Cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账户或密码不正确");
         }
 
         // 3.用户脱敏
@@ -143,7 +143,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public User getSafetyUser(User originUser) {
         if (originUser == null){
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求数据为空");
         }
         User safetyUser = new User();
         safetyUser.setId(originUser.getId());
